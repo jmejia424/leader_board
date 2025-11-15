@@ -1,0 +1,15 @@
+[
+  {
+    "origin": [
+      "http://localhost:*",
+      "http://*.localhost:*",
+      "http://192.168.86.100:*",
+      "https://leader-board-2d961.web.app",
+      "https://leader-board-2d961.firebaseapp.com",
+      "leader-board-2d961.firebaseapp.com",
+      "leader-board-2d961.web.app"
+    ],
+    "method": ["GET"],
+    "maxAgeSeconds": 3600
+  }
+]

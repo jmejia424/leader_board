@@ -1,0 +1,88 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user owns the resource
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.admin == true;
+    }
+    
+    // Score submissions collection
+    match /score_submissions/{submissionId} {
+      // Users can read their own submissions
+      allow read: if isOwner(resource.data.userId);
+      
+      // Users can create their own submissions with valid data
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.pinballId is string
+        && request.resource.data.playerNumber is int
+        && request.resource.data.playerNumber >= 1
+        && request.resource.data.playerNumber <= 4
+        && request.resource.data.imageUrl is string
+        && request.resource.data.submittedAt is timestamp
+        && request.resource.data.retryCount == 0;
+      
+      // Users cannot update or delete their submissions
+      allow update, delete: if false;
+      
+      // Admins can read all submissions
+      allow read: if isAdmin();
+      
+      // Cloud Functions can update submissions (using Admin SDK, bypasses these rules)
+    }
+    
+    // Settings collection - read-only for authenticated users
+    match /settings/{document} {
+      // All authenticated users can read settings (pinball machines, etc.)
+      allow read: if isAuthenticated();
+      
+      // Only admins can write to settings
+      allow write: if isAdmin();
+    }
+    
+    // Scores collection - read by all, write by Cloud Functions only
+    match /scores/{scoreId} {
+      // Anyone can read scores (for leaderboards)
+      allow read: if true;
+      
+      // Only Cloud Functions can write scores (using Admin SDK, bypasses rules)
+      allow write: if false;
+    }
+    
+    // User scores subcollection - user can read their own
+    match /users/{userId}/scores/{scoreId} {
+      // Users can read their own scores
+      allow read: if isOwner(userId);
+      
+      // Cloud Functions write (bypasses rules)
+      allow write: if false;
+    }
+    
+    // Materialized leaderboards - read by all
+    match /leaderboards/{leaderboardId}/entries/{userId} {
+      // Anyone can read leaderboard entries
+      allow read: if true;
+      
+      // Only Cloud Functions can write (bypasses rules)
+      allow write: if false;
+    }
+    
+    // Default deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
