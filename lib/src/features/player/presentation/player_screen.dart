@@ -6,10 +6,91 @@ import 'package:leader_board/src/features/player/application/player_screen_contr
 import 'package:leader_board/src/features/player/application/player_state_controller.dart';
 import 'package:leader_board/src/features/player/presentation/components/image_capture.dart';
 import 'package:leader_board/src/features/player/presentation/components/player_selector.dart';
+import 'package:leader_board/src/features/settings/application/settings_service.dart';
 import 'package:leader_board/src/utils/async_value_ui.dart';
+import 'package:leader_board/src/utils/firebase_storage_service.dart';
 
 class PlayerScreen extends ConsumerWidget {
   const PlayerScreen({super.key});
+
+  Future<void> _showConfirmationDialog(
+    BuildContext context,
+    WidgetRef ref,
+    int playerNumber,
+    String pinballName,
+    String pinballId,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Submission'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FutureBuilder<String>(
+              future: FirebaseStorageService.getPinballImageUrl(
+                pinballId,
+                ImageSize.small,
+              ),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CircularProgressIndicator();
+                } else if (snapshot.hasError) {
+                  return const Icon(Icons.error);
+                } else {
+                  return Image.network(snapshot.data!);
+                }
+              },
+            ),
+            const SizedBox(height: 16),
+            Text.rich(
+              TextSpan(
+                text: 'Submit score for ',
+                children: [
+                  TextSpan(
+                    text: 'Player #$playerNumber',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Text.rich(
+              TextSpan(
+                text: 'on ',
+                children: [
+                  TextSpan(
+                    text: pinballName,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const TextSpan(text: '?'),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Yes'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      await ref.read(playerScreenControllerProvider.notifier).submitScore();
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -45,10 +126,24 @@ class PlayerScreen extends ConsumerWidget {
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: canSubmit
-                  ? () {
-                      ref
-                          .read(playerScreenControllerProvider.notifier)
-                          .submitScore();
+                  ? () async {
+                      final pinballsAsync = await ref.read(
+                        pinballCollectionProvider.future,
+                      );
+                      final selectedPinball = pinballsAsync.firstWhere(
+                        (p) => p.id == playerState.selectedPinballId,
+                        orElse: () => throw Exception('Pinball not found'),
+                      );
+
+                      if (context.mounted) {
+                        await _showConfirmationDialog(
+                          context,
+                          ref,
+                          playerState.selectedPlayer,
+                          selectedPinball.name,
+                          selectedPinball.id,
+                        );
+                      }
                     }
                   : null,
               icon: isSubmitting
