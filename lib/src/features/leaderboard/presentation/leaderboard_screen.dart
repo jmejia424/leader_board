@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:leader_board/src/common_widgets/reusable_pinball_carousel.dart';
 import 'package:leader_board/src/features/authentication/presentation/components/profile_icon.dart';
 import 'package:leader_board/src/features/leaderboard/application/leaderboard_service.dart';
@@ -8,6 +9,7 @@ import 'package:leader_board/src/features/leaderboard/presentation/components/le
 import 'package:leader_board/src/features/leaderboard/presentation/components/leaderboard_list.dart';
 import 'package:leader_board/src/features/leaderboard/presentation/components/period_selector.dart';
 import 'package:leader_board/src/features/leaderboard/presentation/components/qr_code.dart';
+import 'package:leader_board/src/routing/app_routes.dart';
 
 class LeaderBoardScreen extends ConsumerStatefulWidget {
   const LeaderBoardScreen({super.key});
@@ -28,7 +30,28 @@ class _LeaderBoardScreenState extends ConsumerState<LeaderBoardScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const PeriodSelector(),
+        leading: IconButton(
+          icon: ShaderMask(
+            shaderCallback: (Rect bounds) {
+              return const LinearGradient(
+                colors: [
+                  Colors.red,
+                  Colors.orange,
+                  Colors.yellow,
+                  Colors.green,
+                  Colors.blue,
+                  Colors.purple,
+                ],
+                tileMode: TileMode.mirror,
+              ).createShader(bounds);
+            },
+            child: const Icon(Icons.camera, color: Colors.white),
+          ),
+          onPressed: () {
+            context.goNamed(AppRoute.player.name);
+          },
+        ),
+        title: PeriodSelector(),
         actions: const [ProfileIcon()],
       ),
       body: Column(

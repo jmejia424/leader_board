@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:leader_board/src/common_widgets/reusable_pinball_carousel.dart';
 import 'package:leader_board/src/features/authentication/presentation/components/profile_icon.dart';
 import 'package:leader_board/src/features/player/application/player_screen_controller.dart';
@@ -7,6 +8,7 @@ import 'package:leader_board/src/features/player/application/player_state_contro
 import 'package:leader_board/src/features/player/presentation/components/image_capture.dart';
 import 'package:leader_board/src/features/player/presentation/components/player_selector.dart';
 import 'package:leader_board/src/features/settings/application/settings_service.dart';
+import 'package:leader_board/src/routing/app_routes.dart';
 import 'package:leader_board/src/utils/async_value_ui.dart';
 import 'package:leader_board/src/utils/firebase_storage_service.dart';
 
@@ -106,6 +108,27 @@ class PlayerScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: ShaderMask(
+            shaderCallback: (Rect bounds) {
+              return const LinearGradient(
+                colors: [
+                  Colors.red,
+                  Colors.orange,
+                  Colors.yellow,
+                  Colors.green,
+                  Colors.blue,
+                  Colors.purple,
+                ],
+                tileMode: TileMode.mirror,
+              ).createShader(bounds);
+            },
+            child: const Icon(Icons.leaderboard, color: Colors.white),
+          ),
+          onPressed: () {
+            context.goNamed(AppRoute.leaderboard.name);
+          },
+        ),
         title: const Text('Capture Player Score'),
         actions: const [ProfileIcon()],
       ),

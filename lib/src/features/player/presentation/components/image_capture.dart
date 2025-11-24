@@ -11,7 +11,12 @@ class ImageCapture extends ConsumerWidget {
 
   Future<void> _pickImage(WidgetRef ref) async {
     final imagePicker = ImagePicker();
-    final pickedFile = await imagePicker.pickImage(source: ImageSource.camera);
+    final pickedFile = await imagePicker.pickImage(
+      source: ImageSource.camera,
+      imageQuality:
+          70, // Compress to ~70% quality, significantly reduces file size
+      maxWidth: 800, // Resize to a max width of 800 pixels
+    );
     if (pickedFile != null) {
       ref
           .read(playerStateControllerProvider.notifier)
