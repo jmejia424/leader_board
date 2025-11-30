@@ -5,6 +5,9 @@
 // # Switch back to Gemini (the default)
 // firebase deploy --only functions --set-env-vars="VISION_MODEL_PROVIDER=GEMINI"
 
+// --- Stern API Functions (separate module) ---
+export { getSternGameTeams, getSternHighScores, getSternMachineDetails, getSternMachines } from "./stern_api";
+
 import { Storage } from "@google-cloud/storage";
 import { Part, VertexAI } from "@google-cloud/vertexai";
 import axios from "axios";
